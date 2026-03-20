@@ -42,6 +42,16 @@ def add_expense():
 
     return jsonify({"message": "Expenses added successfully"})
 
+@app.route('/expenses/<int:id>', methods=['DELETE'])
+def delete_expenses(id):
+    print("DELETE CALLED WITH ID:", id)
+    
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM expenses WHERE id=$s", (id,))
+    db.commit()
+
+    return jsonify({"message": "Deleted"})
+
 @app.route('/')
 def index():
     return render_template('index.html')
