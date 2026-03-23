@@ -47,11 +47,29 @@ def delete_expenses(id):
     print("DELETE CALLED WITH ID:", id)
     
     cursor = db.cursor()
-    cursor.execute("DELETE FROM expenses WHERE id=$s", (id,))
+    cursor.execute("DELETE FROM expenses WHERE id=%s", (id,))
     db.commit()
 
     return jsonify({"message": "Deleted"})
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    cursor = db.cursor(dictionary=True)
+
+    sql = "SELECT * FROM users WHERE username=%s AND password=%s"
+    cursor.execute(sql, (data['username'], data['password']))
+
+    user = cursor.fetchone()
+
+    if user:
+        return jsonify({
+            "message": "Login successsful",
+            "user_id": user['id']
+        })
+    else:
+        return jsonify({"message": "Invalid credentials"}), 401
+    
 @app.route('/')
 def index():
     return render_template('index.html')

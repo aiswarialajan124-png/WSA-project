@@ -7,6 +7,15 @@
     <body class="bg-light">
         <div class="container mt-5">
             <h1 class="text-center mb-4">Finance Tracker</h1>
+            
+            <div class="card p-4 mb-4 shadow" id="loginSection">
+                <h4>Login</h4>
+                
+                <input type="text" id="username" class="form-control mb-2" placeholder="Username">
+                <input type="password" id="password" class="form-control mb-2" placeholder="Password">
+
+                <button class="btn btn-success w-100" onclick="login()">Login</button>
+            </div>
 
             <!-- Add Expenses -->
              <div class="card p-4 mb-4 shadow">
@@ -46,6 +55,34 @@
 
         </div>
         <script>
+            let currentUserId = null;
+
+            async function login() {
+                let user = {
+                    username: document.getElementById("username").value,
+                    password: document.getElementById("password").value
+                };
+                let response = await fetch("http://127.0.0.1:5000/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(user)
+                });
+                
+                let data = await response.json();
+                
+                if (response.status === 200) {
+                    alert("Login successful");
+
+                    currentUserId = data.user_id;
+
+                    // Hide login box
+                    document.getElementById("loginSection").style.display = "none";
+                } else {
+                    alert("Invalid username or password");
+                }
+            }
             async function loadExpenses() {
                 let response = await fetch("http://127.0.0.1:5000/expenses");
                 let data = await response.json();
@@ -71,11 +108,15 @@
                 });
             }
             async function addExpense() {
+                if (!currentUserId) {
+                    alert("Please Login first");
+                    return;
+                }
                 let expense = {
                     amount: document.getElementById("amount").value,
                     description: document.getElementById("description").value,
                     category_id: 1,
-                    user_id: 1,
+                    user_id: currentUserId,
                     date: document.getElementById("date").value
                 };
                 await fetch("http://127.0.0.1:5000/expenses", {
