@@ -62,7 +62,8 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Amount</th>
+                            <th>Amount (€)</th>
+                            <th>Amount ($)</th>
                             <th>Description</th>
                             <th>Date</th>
                             <th>Action</th>
@@ -136,7 +137,12 @@
                 document.getElementById("totalAmount").innerText = total.toFixed(2);
                 document.getElementById("totalCount").innerText = count;
             }
-            
+            async function getExchangeRate() {
+                let response = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+                let data = await response.json();
+
+                return data.rates.USD; // Assuming you want to convert to USD
+            }
             async function addExpense() {
                 if (!currentUserId) {
                     alert("Please Login first");
