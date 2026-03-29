@@ -8,6 +8,7 @@
         <div class="container mt-5">
             <h1 class="text-center mb-4">Finance Tracker</h1>
             
+            <!-- Login Section -->
             <div class="card p-4 mb-4 shadow" id="loginSection">
                 <h4>Login</h4>
                 
@@ -15,6 +16,24 @@
                 <input type="password" id="password" class="form-control mb-2" placeholder="Password">
 
                 <button class="btn btn-success w-100" onclick="login()">Login</button>
+            </div>
+
+            <div class="row mb-4" id="dashboard">
+
+                <div class="col-md-6">
+                    <div class="card text-center p-3 shadow">
+                        <h5>Total Spending (€)</h5>
+                        <h2 id=totalAmount>0.00</h2>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card text-center p-3 shadow">
+                        <h5>Number of Expenses</h5>
+                        <h2 id="totalCount">0</h2>
+                    </div>
+                </div>
+                
             </div>
 
             <!-- Add Expenses -->
