@@ -33,7 +33,7 @@
                         <h2 id="totalCount">0</h2>
                     </div>
                 </div>
-                
+
             </div>
 
             <!-- Add Expenses -->
@@ -106,26 +106,37 @@
                 let response = await fetch("http://127.0.0.1:5000/expenses");
                 let data = await response.json();
 
+                let rate = await getExchangeRate();
+
                 let table = document.querySelector("#expenseTable");
                 table.innerHTML = "";
 
+                let total = 0;
+                let count = data.length;
+
                 data.forEach(exp => {
+                    let converted = (exp.amount * rate).toFixed(2);
+
+                    total += Number(exp.amount);
+
                     let row = `
                     <tr>
                         <td>${exp.id}</td>
                         <td>${exp.amount}</td>
+                        <td>${exp.converted}</td>
                         <td>${exp.description}</td>
                         <td>${exp.date}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">
-                                Delete
-                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">Delete</button>
                         </td>
                     </tr>
                     `;
                     table.innerHTML += row;
                 });
+                document.getElementById("totalAmount").innerText = total.toFixed(2);
+                document.getElementById("totalCount").innerText = count;
             }
+            
             async function addExpense() {
                 if (!currentUserId) {
                     alert("Please Login first");
