@@ -41,7 +41,10 @@
                 <h4>Add Expense</h4>
                 <div class="row">
                     <div class="col">
-                        <input type="number" id="amount" class="form-control" placeholder="Amount">
+                        <div class="input-group">
+                            <span class="input-group-text">€</span>
+                            <input type="number" id="amount" class="form-control" placeholder="Amount in EUR" step="0.01">
+                        </div>
                     </div>
                     <div class="col">
                         <input type="text" id="description" class="form-control" placeholder="Description">
