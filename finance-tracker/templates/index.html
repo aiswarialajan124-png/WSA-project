@@ -111,6 +111,7 @@
                 let data = await response.json();
 
                 let rate = await getExchangeRate();
+                console.log("RATE USED:", rate);
 
                 let table = document.querySelector("#expenseTable");
                 table.innerHTML = "";
@@ -119,7 +120,7 @@
                 let count = data.length;
 
                 data.forEach(exp => {
-                    let converted = rate ? (exp.amount * rate).toFixed(2) : "N/A";
+                    let converted = (Number(exp.amount) * Number(rate)).toFixed(2);
 
                     total += Number(exp.amount);
 
@@ -141,18 +142,12 @@
                 document.getElementById("totalCount").innerText = count;
             }
             async function getExchangeRate() {
-                try {
                     let response = await fetch("http://open.er-api.com/v6/latest/EUR");
                     let data = await response.json();
 
                     console.log("API DATA:", data); //debug
 
                     return data.rates.USD;
-                    
-                } catch (error) {
-                    console.error("API ERROR:", error);
-                    return 1; // fallback rate
-                }
             }
             async function addExpense() {
                 if (!currentUserId) {
