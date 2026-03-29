@@ -142,12 +142,13 @@
             }
             async function getExchangeRate() {
                 try {
-                    let response = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+                    let response = await fetch("http://open.er-api.com/v6/latest/EUR");
                     let data = await response.json();
 
                     console.log("API DATA:", data); //debug
 
-                    return data.rates?.USD || 1; // fallback if undefined
+                    return data.rates.USD;
+                    
                 } catch (error) {
                     console.error("API ERROR:", error);
                     return 1; // fallback rate
