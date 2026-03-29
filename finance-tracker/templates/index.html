@@ -141,10 +141,17 @@
                 document.getElementById("totalCount").innerText = count;
             }
             async function getExchangeRate() {
-                let response = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
-                let data = await response.json();
+                try {
+                    let response = await fetch("https://api.exchangerate-api.com/v4/latest/EUR");
+                    let data = await response.json();
 
-                return data.rates.USD; // Assuming you want to convert to USD
+                    console.log("API DATA:", data); //debug
+
+                    return data.rates?.USD || 1; // fallback if undefined
+                } catch (error) {
+                    console.error("API ERROR:", error);
+                    return 1; // fallback rate
+                }
             }
             async function addExpense() {
                 if (!currentUserId) {
