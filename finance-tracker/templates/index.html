@@ -11,24 +11,24 @@
                 <p class="text-muted">Track your spending with real-time insights</p>
             
             <!-- Login Section -->
-            <div class="card p-4 mb-4 shadow" id="loginSection">
-                <h4>Login</h4>
-                
+
+            <div id="loginSection">
                 <input type="text" id="username" class="form-control mb-2" placeholder="Username">
                 <input type="password" id="password" class="form-control mb-2" placeholder="Password">
 
                 <button class="btn btn-success w-100" onclick="login()">Login</button>
             </div>
-
+        </div>
+        <div id="appSection" style="display: none;">
             <div class="row mb-4">
-
+                    
                 <div class="col-md-6">
                     <div class="card text-center p-4 shadow border-0">
                         <h6 class="text-muted">Total Spending</h6>
                         <h2 id="totalAmount" class="fw-bold text-primary">€0</h2>
                     </div>
                 </div>
-
+                    
                 <div class="col-md-6">
                     <div class="card text-center p-4 shadow border-0">
                         <h6 class="text-muted">Expenses Count</h6>
@@ -36,7 +36,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Add Expenses -->
              <div class="card p-4 mb-4 shadow border-0">
                 <h4>Add Expense</h4>
@@ -50,17 +49,16 @@
                     <div class="col">
                         <input type="text" id="description" class="form-control" placeholder="Description">
                     </div>
-                    <div class="col">
-                        <input type="date" id="date" class="form-control">
-                    </div>
-                    <div class="col">
-                        <button class="btn btn-dark w-100" onclick="addExpense()">Add</button>
-                    </div>
                 </div>
-             </div>
-
-             <!-- Table -->
-              <div class="card p-4 shadow">
+                <div class="col">
+                    <input type="date" id="date" class="form-control">
+                </div>
+                <div class="col">
+                    <button class="btn btn-dark w-100" onclick="addExpense()">Add</button>
+                </div>
+            </div>
+            <!-- Table -->
+             <div class="card p-4 shadow">
                 <h4>Expenses</h4>
                 <table class="table table-hover align-middle">
                     <thead>
@@ -75,8 +73,8 @@
                     </thead>
                     <tbody id="expenseTable"></tbody>
                 </table>
-              </div>
-
+            </div>
+        </div>
         </div>
         <script>
             let currentUserId = null;
@@ -113,12 +111,15 @@
                 let data = await response.json();
 
                 if (response.status === 200) {
-                    alert ("Login successful");
+                    alert("Login successful");
                     currentUserId = data.user_id;
+
+                    // Hide login
                     document.getElementById("loginSection").style.display = "none";
-                    loadExpenses(); // Reload expenses after login
+                    // Show app
+                    document.getElementById("appSection").style.display = "block";
                 } else {
-                    alert("Invalid credentials");
+                    alert("Invalid username or password");
                 }
             }
             // Load expenses and dashboard
@@ -187,7 +188,7 @@
                 });
                 loadExpenses();
             }
-            // Delet expense
+            // Delete expense
             async function deleteExpense(id) {
                 console.log("Deleting ID:", id);
 
@@ -196,8 +197,6 @@
                 });
                 loadExpenses();
             }
-            // Initial load
-            loadExpenses();
         </script>
     </body>
 </html>
