@@ -111,13 +111,10 @@
                 let data = await response.json();
 
                 if (response.status === 200) {
-                    alert("Login successful");
                     currentUserId = data.user_id;
-
-                    // Hide login
                     document.getElementById("loginSection").style.display = "none";
-                    // Show app
                     document.getElementById("appSection").style.display = "block";
+                    loadExpenses();
                 } else {
                     alert("Invalid username or password");
                 }
