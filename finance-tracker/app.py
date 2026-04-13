@@ -1,53 +1,61 @@
-from flask import Flask, request, jsonify
-import mysql.connector
+from flask import Flask, request, jsonify, render_template
+import sqlite3
 from flask_cors import CORS
-from flask import render_template
 
 app = Flask(__name__)
 CORS(app)
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="", # default XAMPP
-    database="finance_app"
-)
+# SQLite connection function
+def get_db():
+    return sqlite3.connect("database.db")
 
 @app.route('/expenses', methods=['GET'])
 def get_expenses():
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM expenses")
-    result = cursor.fetchall()
-    return jsonify(result)
-
-@app.route('/expenses', methods=['POST'])
-def add_expense():
-    data = request.json
+    db = get_db()
     cursor = db.cursor()
 
-    sql = """INSERT INTO expenses
-              (amount, description, category_id, user_id, date)
-              VALUES (%s, %s, %s, %s, %s)"""
+    cursor.execute("SELECT * FROM expenses")
+    rows = cursor.fetchall()
 
-    values = (
+    expenses = []
+    for row in rows:
+        expenses.append({
+            "id": row[0],
+            "amount": row[1],
+            "description": row[2],
+            "date": row[3],
+            "user_id": row[4],
+            "category_id": row[5]
+        })
+    return jsonify(expenses)
+
+@app.route('expenses', methods=['POST'])
+def add_expense():
+    data = request.json
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+                   INSERT INTO expenses (amount, description, category_id, user_id, date)
+                   VALUES (?, ?, ?, ?, ?)
+    """, (
         data['amount'],
         data['description'],
         data['category_id'],
         data['user_id'],
         data['date']
-    )
+    ))
 
-    cursor.execute(sql, values)
     db.commit()
 
     return jsonify({"message": "Expenses added successfully"})
 
 @app.route('/expenses/<int:id>', methods=['DELETE'])
 def delete_expenses(id):
-    print("DELETE CALLED WITH ID:", id)
-    
+    db = get_db()
     cursor = db.cursor()
-    cursor.execute("DELETE FROM expenses WHERE id=%s", (id,))
+
+    cursor.execute("DELETE FROM expenses WHERE id=?", (id,))
     db.commit()
 
     return jsonify({"message": "Deleted"})
@@ -55,17 +63,20 @@ def delete_expenses(id):
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
-    cursor = db.cursor(dictionary=True)
+    db = get_db()
+    cursor = db.cursor()
 
-    sql = "SELECT * FROM users WHERE username=%s AND password=%s"
-    cursor.execute(sql, (data['username'], data['password']))
+    cursor.execute(
+        "SELECT * FROM users WHERE username=? AND password=?",
+        (data['username'], data['password'])
+    )
 
     user = cursor.fetchone()
 
     if user:
         return jsonify({
-            "message": "Login successsful",
-            "user_id": user['id']
+            "message": "Login successful",
+            "user_id": user[0]
         })
     else:
         return jsonify({"message": "Invalid credentials"}), 401
