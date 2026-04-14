@@ -29,7 +29,7 @@ def get_expenses():
         })
     return jsonify(expenses)
 
-@app.route('expenses', methods=['POST'])
+@app.route('/expenses', methods=['POST'])
 def add_expense():
     data = request.json
     db = get_db()
