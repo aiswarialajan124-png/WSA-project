@@ -20,6 +20,9 @@
             </div>
         </div>
         <div id="appSection" style="display: none;">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
             <div class="row mb-4">
                     
                 <div class="col-md-6">
@@ -193,6 +196,17 @@
                     method: "DELETE"
                 });
                 loadExpenses();
+            }
+            function logout() {
+                currentUserId = null;
+
+                document.getElementById("username").value = "";
+                document.getElementById("password").value = "";
+                
+                document.getElementById("expenseTable").innerHTML = "";
+                
+                document.getElementById("appSection").style.display = "none";
+                document.getElementById("loginSection").style.display = "block";
             }
         </script>
     </body>
