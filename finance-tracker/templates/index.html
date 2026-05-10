@@ -495,14 +495,22 @@
                 </div>
                 <div class="validation-msg" id="validationMsg">Fill in all feilds before adding expense</div>
              </div>
-             
-        </main>
-    </div>
-           
-            <!-- Table -->
-             <div class="card p-4 shadow">
-                <h4>Expenses</h4>
-                <table class="table table-hover align-middle">
+             <!-- Expense Table -->
+              <div class="panel">
+                <div class="panel-title">Expenses</div>
+
+                <div class="filter-bar">
+                    <span class="filter-label">Search</span>
+                    <input type="text" id="searchFilter" placeholder="Filter by description" oninput="renderTable()">
+                    <span class="filter-label">Sort</span>
+                    <select id="sortFilter" onchange="renderTable()">
+                        <option value="date=desc">Date (newest)</option>
+                        <option value="date-asc">Date (oldest)</option>
+                        <option value="amount-desc">Amount (high)</option>
+                        <option value="amount-asc">Amount (low)</option>
+                    </select>
+                </div>
+                <table>
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -516,8 +524,9 @@
                     <tbody id="expenseTable"></tbody>
                 </table>
             </div>
-        </div>
-        </div>
+            
+        </main>
+    </div>
         <script>
             let currentUserId = null;
 
