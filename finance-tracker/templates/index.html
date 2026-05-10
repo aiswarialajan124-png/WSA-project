@@ -470,29 +470,34 @@
                     <canvas id="spendingChart"></canvas>
                 </div>
             </div>
-        </main>
-    </div>
-            <!-- Add Expenses -->
-             <div class="card p-4 mb-4 shadow border-0">
-                <h4>Add Expense</h4>
-                <div class="row">
-                    <div class="col">
-                        <div class="input-group">
-                            <span class="input-group-text">€</span>
-                            <input type="number" id="amount" class="form-control" placeholder="Amount in EUR" step="0.01">
+            <!-- Add Expenses-->
+             <div class="panel">
+                <div class="panel-title">Add Expense</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Amount (EUR)</label>
+                        <div class="amount-wrap">
+                            <span class="currency">EUR</span>
+                            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" style="padding-left:3rem">
                         </div>
                     </div>
-                    <div class="col">
-                        <input type="text" id="description" class="form-control" placeholder="Description">
+                    <div class="form-field">
+                        <label>Description</label>
+                        <input type="text" id="description" placeholder="e.g. Groceries">
+                    </div>
+                    <div class="form-field">
+                        <label>Date</label>
+                        <input type="date" id="date">
+                    </div>
+                    <div>
+                        <button class="btn-add" onclick="addExpense()" id="addBtn">+ Add</button>
                     </div>
                 </div>
-                <div class="col">
-                    <input type="date" id="date" class="form-control">
-                </div>
-                <div class="col">
-                    <button class="btn btn-dark w-100" onclick="addExpense()">Add</button>
-                </div>
-            </div>
+                
+             </div>
+        </main>
+    </div>
+           
             <!-- Table -->
              <div class="card p-4 shadow">
                 <h4>Expenses</h4>
