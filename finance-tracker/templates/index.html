@@ -446,7 +446,26 @@
                 <button class="btn-logout" onclick="logout()">Sign out</button>"
             </div>
         </header>
-     </div>
+        <main class="main">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Spending</div>
+                    <div class="stat-value green" id="totalAmount">0.00</div>
+                    <div class="stat-sub" id="totalUSD">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Expenses Count</div>
+                    <div class="stat-value gold" id="totalCount">0</div>
+                    <div class="stat-sub">recorded entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average Spend</div>
+                    <div class="stat-value" id="avgAmount">0.00</div>
+                    <div class="stat-sub">per expense</div>
+                </div>
+            </div>
+        </main>
+    </div>
             <!-- Add Expenses -->
              <div class="card p-4 mb-4 shadow border-0">
                 <h4>Add Expense</h4>
