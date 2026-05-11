@@ -74,26 +74,35 @@ def init_db():
 
 init_db()
 
+# Expenses
+
+# GET /expenses?user_id=1
 @app.route('/expenses', methods=['GET'])
 def get_expenses():
+    user_id = request.args.get('user_id')
     db = get_db()
     cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM expenses")
+    if user_id:
+        cursor.execute("""
+            SELECT e.*, c.name as category_name
+            FROM expenses e
+            LEFT JOIN categories c ON e.category_id = c.id
+            WHERE e.user_id = ?
+        """, (user_id,))
+    else:
+        cursor.execute("""
+            SELECT e.*, c.name as category_name
+            FROM  expenses e
+            LEFT JOIN categories c ON e.category_id = c.id
+        """)
+    
     rows = cursor.fetchall()
-
-    expenses = []
-    for row in rows:
-        expenses.append({
-            "id": row[0],
-            "amount": row[1],
-            "description": row[2],
-            "date": row[3],
-            "user_id": row[4],
-            "category_id": row[5]
-        })
+    expenses = [dict(row) for row in rows]
+    db.close()
     return jsonify(expenses)
 
+# POST /expenses
 @app.route('/expenses', methods=['POST'])
 def add_expense():
     data = request.json
@@ -101,30 +110,135 @@ def add_expense():
     cursor = db.cursor()
 
     cursor.execute("""
-                   INSERT INTO expenses (amount, description, category_id, user_id, date)
-                   VALUES (?, ?, ?, ?, ?)
+        INSERT INTO expenses (amount, description, category_id, user_id, date)
+        VALUES (?, ?, ?, ?, ?)
     """, (
         data['amount'],
         data['description'],
-        data['category_id'],
+        data.get('category_id', 1),
         data['user_id'],
         data['date']
     ))
 
     db.commit()
-
+    db.close()
     return jsonify({"message": "Expenses added successfully"})
 
+# PUT /expenses/<id>
+@app.route('/expenses/<int:id>', methods=['PUT'])
+def edit_expenses(id):
+    data = request.json
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        UPDATE expenses
+        SET amount = ?, description = ?, category_id = ?, date = ?
+        WHERE id = ?
+    """, (
+        data['amount'],
+        data['description'],
+        data.get('category_id', 1),
+        data['date'],
+        id
+    ))
+
+    db.commit()
+    db.close()
+    return jsonify({"message": "Expenses updated successfully"})
+
+# DELETE /expenses/<id>
 @app.route('/expenses/<int:id>', methods=['DELETE'])
 def delete_expenses(id):
     db = get_db()
     cursor = db.cursor()
-
+    
     cursor.execute("DELETE FROM expenses WHERE id=?", (id,))
     db.commit()
+    db.close()
 
     return jsonify({"message": "Deleted"})
 
+# Categories
+
+# GET /categories?user_id=1
+@app.route('categories', methods=['GET'])
+def get_categories():
+    user_id = request.args.get('user_id')
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT * FROM categories
+        WHERE user_id IS NULL OR user_id = ?
+        ORDER BY user_id IS NULL DESC, name ASC
+    """, (user_id,))
+
+    categories = [dict(row) for row in cursor.fetchall()]
+    db.close()
+    return jsonify(categories)
+
+# POST /categories
+@app.route('/categories', methods=['POST'])
+def add_category():
+    data = request.json
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT id FROM categories
+        WHERE name = ? AND (user_id = ? OR user_id IS NULL)
+    """, (data['name'], data['user_id']))
+
+    if cursor.fetchone():
+        db.close()
+        return jsonify({"message": "Category already exists"}), 409
+    
+    cursor.execute("""
+        INSERT INTO categories (name, user_id) VALUES (?, ?)
+    """, (data['name'], data['user_id']))
+
+    new_id = cursor.lastrowid
+    db.commit()
+    db.close()
+    return jsonify({"message": "Category added", "id": new_id})
+
+# Budget
+
+# GET /budget?user_id=1
+@app.route('/budget', methods=['GET'])
+def get_budget():
+    user_id = request.args.get('user_id')
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT amount FROM budgets WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    db.close()
+
+    if row:
+        return jsonify({"amount": row["amount"]})
+    else:
+        return jsonify({"amount": None})
+    
+# POST /budget
+@app.route('/budget', methods=['POST'])
+def set_budget():
+    data = request.json
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO budgets (user_id, amount)
+        VALUES (?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET amount = excluded.amount
+    """, (data['user_id'], data['amount']))
+
+    db.commit()
+    db.close()
+    return jsonify({"message": "Budget saved"})
+
+# Login
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
@@ -132,20 +246,22 @@ def login():
     cursor = db.cursor()
 
     cursor.execute(
-        "SELECT * FROM users WHERE username=? AND password=?",
+        "SELECT * FROM users WHERE username = ? AND password = ?",
         (data['username'], data['password'])
     )
 
     user = cursor.fetchone()
+    db.close()
 
     if user:
         return jsonify({
             "message": "Login successful",
-            "user_id": user[0]
+            "user_id": user["id"]
         })
     else:
         return jsonify({"message": "Invalid credentials"}), 401
     
+# Serve Frontend
 @app.route('/')
 def index():
     return render_template('index.html')
