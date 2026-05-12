@@ -162,7 +162,7 @@ def delete_expenses(id):
 # Categories
 
 # GET /categories?user_id=1
-@app.route('categories', methods=['GET'])
+@app.route('/categories', methods=['GET'])
 def get_categories():
     user_id = request.args.get('user_id')
     db = get_db()
