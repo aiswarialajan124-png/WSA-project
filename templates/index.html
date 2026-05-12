@@ -659,13 +659,11 @@
     <!-- Login Page -->
      <div id="loginPage">
         <div class="login-card">
-            <!-- small logo -->
             <div class="login-logo">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
             <h1>Finance Tracker</h1>
             <p>Sign in to manage your expenses</p>
-
             <div class="field-group">
                 <label>Username</label>
                 <input type="text" id="username" placeholder="Enter username" autocomplete="username">
@@ -678,6 +676,7 @@
             <div class="login-error" id="loginError">Invalid username or password.Try again</div>
         </div>
      </div>
+     <!-- App Page -->
      <div id="appPage">
         <header class="topbar">
             <div class="topbar-brand">
@@ -685,15 +684,26 @@
                     Finance Tracker
             </div>
             <div class="topbar-right">
-                <div class="user-chip">Signed in as<span id="usernameDisplay"></span></div>
+                <div class="user-chip">Signed in as<span id="usernameDisplay">-</span></div>
                 <button class="btn-logout" onclick="logout()">Sign out</button>
             </div>
         </header>
         <main class="main">
+            <!-- Budget warning banner - shown when spending is near or over budget -->
+             <div class="budget-banner" id="budgetBanner">
+                <div>
+                    <div class="budget-banner-text" id="budgetBannerText"></div>
+                    <div class="budget-banner-sub" id="budgetBannerSub"></div>
+                </div>
+                <div class="budget-bar-wrap">
+                    <div class="budget-bar-fill" id="budgetBarFill"></div>
+                </div>
+             </div>
+             <!-- Stat Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">Total Spending</div>
-                    <div class="stat-value green" id="totalAmount">0.00</div>
+                    <div class="stat-value green" id="totalAmount">€0.00</div>
                     <div class="stat-sub" id="totalUSD">$0.00</div>
                 </div>
                 <div class="stat-card">
@@ -703,30 +713,70 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Average Spend</div>
-                    <div class="stat-value" id="avgAmount">0.00</div>
+                    <div class="stat-value" id="avgAmount">€0.00</div>
                     <div class="stat-sub">per expense</div>
                 </div>
-            </div>
-            <div class="panel">
-                <div class="panel-title">Spending Over Time</div>
-                <div class="chart-wrap">
-                    <canvas id="spendingChart"></canvas>
+                <div class="stat-card">
+                    <div class="stat-label">Monthly Budget</div>
+                    <div class="stat-value" id="budgetDisplay">-</div>
+                    <div class="stat-sub" id="budgetRemaining">not set</div>
                 </div>
             </div>
+            <!-- Charts Row -->
+             <div class="charts-rows">
+                <!-- Spending over time bar chart -->
+                 <div class="panel">
+                    <div class="panel-title">Spending Over Time</div>
+                    <div class="chart-wrap">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
+                 </div>
+                 <!-- Spending by category pie chart -->
+                  <div class="panel">
+                    <div class="panel-title">Spending by Category</div>
+                    <div class="chart-wrap">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                  </div>
+             </div>
+            <!-- Monthly Breakdown -->
+            <div class="panel">
+                <div class="panel-title">Monthly Breakdown</div>
+                <div class="monthly-grid" id="monthlyGrid">
+                    <div class="empty-state" style="grid-column:1/-1">No data yet</div>
+                </div>
+            </div>
+            <!-- Budget Setting -->
+             <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title" style="margin:0">Monthly Budget Limit</div>
+                </div>
+                <div class="budget-set-row">
+                    <div class="form-field">
+                        <label>Set Budget (€)</label>
+                        <input type="number" id="budgetInput" placeholder="e.g. 500" step="0.01" min="0">
+                    </div>
+                    <button class="btn-sm" onclick="saveBudget()">Save Budget</button>
+                </div>
+             </div>
             <!-- Add Expenses-->
              <div class="panel">
                 <div class="panel-title">Add Expense</div>
                 <div class="form-grid">
                     <div class="form-field">
-                        <label>Amount (EUR)</label>
+                        <label>Amount (€)</label>
                         <div class="amount-wrap">
-                            <span class="currency">EUR</span>
-                            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" style="padding-left:3rem">
+                            <span class="currency">€</span>
+                            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01">
                         </div>
                     </div>
                     <div class="form-field">
                         <label>Description</label>
                         <input type="text" id="description" placeholder="e.g. Groceries">
+                    </div>
+                    <div class="form-field">
+                        <label>Category</label>
+                        <select id="categorySelect" onchange="handleCategoryChange()"></select>
                     </div>
                     <div class="form-field">
                         <label>Date</label>
@@ -736,15 +786,24 @@
                         <button class="btn-add" onclick="addExpense()" id="addBtn">+ Add</button>
                     </div>
                 </div>
+                <!-- Custom category input : shown when user selects "Add custom ..." -->
+                 <div class="custom-cat-row" id="customCatRow">
+                    <input type="text" id="customCatInput" placeholder="New category name">
+                    <button class="btn-sm" onclick="saveCustomCategory()">Add</button>
+                    <button class="btn-sm secondary" onclick="cancelCustomCategory()">Cancel</button>
+                 </div>
                 <div class="validation-msg" id="validationMsg">Fill in all feilds before adding expense</div>
              </div>
              <!-- Expense Table -->
               <div class="panel">
                 <div class="panel-title">Expenses</div>
-
                 <div class="filter-bar">
                     <span class="filter-label">Search</span>
                     <input type="text" id="searchFilter" placeholder="Filter by description" oninput="renderTable()">
+                    <span class="filter-label">Category</span>
+                    <select id="categoryFilter" onchange="renderTable()">
+                        <option value="">All</option>
+                    </select>
                     <span class="filter-label">Sort</span>
                     <select id="sortFilter" onchange="renderTable()">
                         <option value="date-desc">Date (newest)</option>
@@ -760,6 +819,7 @@
                             <th>Amount (€)</th>
                             <th>Amount ($)</th>
                             <th>Description</th>
+                            <th>Category</th>
                             <th>Date</th>
                             <th>Action</th>
                         </tr>
@@ -769,6 +829,30 @@
             </div>
 
         </main>
+    </div>
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-title">Edit Expense</div>
+            <input type="hidden" id="editId">
+            <div class="modal-grid">
+                <div class="form-field">
+                    <label>Amount (€)</label>
+                    <input type="number" id="editAmount" step="0.01" min="0.01">
+                </div>
+                <div class="form-field">
+                    <label>Description</label>
+                    <input type="text" id="editDescription">
+                </div>
+                <div class="form-field full">
+                    <label>Category</label>
+                    <select id="editCategory"></select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-sm secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-sm" onclick="saveEdit()">Save Changes</button>
+            </div>
+        </div>
     </div>
     <div id="toast"></div>
     <script>
