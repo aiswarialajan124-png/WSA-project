@@ -181,7 +181,7 @@ def get_categories():
         ORDER BY user_id IS NULL DESC, name ASC
     """, (user_id,))
 
-    row = cursor.fetchall()
+    rows = cursor.fetchall()
     categories = []
     for row in rows:
         categories.append({
