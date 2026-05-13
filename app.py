@@ -84,7 +84,7 @@ def get_expenses():
 
     if user_id:
         cursor.execute("""
-            SELECT e.id, e.amount, e.description, e.date, e.useR_id, e.category_id, c.name
+            SELECT e.id, e.amount, e.description, e.date, e.user_id, e.category_id, c.name
             FROM expenses e
             LEFT JOIN categories c ON e.category_id = c.id
             WHERE e.user_id = ?
