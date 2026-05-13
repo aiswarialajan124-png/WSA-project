@@ -5,10 +5,9 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Database connection 
+# Database connection
 def get_db():
     conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row # Allows to access columns by name instead of index
     return conn
 
 # Database setup
@@ -85,20 +84,30 @@ def get_expenses():
 
     if user_id:
         cursor.execute("""
-            SELECT e.*, c.name as category_name
+            SELECT e.id, e.amount, e.description, e.date, e.useR_id, e.cateory_id, c.name
             FROM expenses e
             LEFT JOIN categories c ON e.category_id = c.id
             WHERE e.user_id = ?
         """, (user_id,))
     else:
         cursor.execute("""
-            SELECT e.*, c.name as category_name
+            SELECT e.id,e.amount, e.description, e.date, e.user_id, e.category_id, c.name
             FROM  expenses e
             LEFT JOIN categories c ON e.category_id = c.id
         """)
-    
+
     rows = cursor.fetchall()
-    expenses = [dict(row) for row in rows]
+    expenses = []
+    for row in rows:
+        expenses.append({
+            "id": row[0],
+            "amount": row[1],
+            "description": row[2],
+            "date": row[3],
+            "user_id": row[4],
+            "category_id": row[5],
+            "category_name": row[6]
+        })
     db.close()
     return jsonify(expenses)
 
@@ -152,11 +161,9 @@ def edit_expenses(id):
 def delete_expenses(id):
     db = get_db()
     cursor = db.cursor()
-    
     cursor.execute("DELETE FROM expenses WHERE id=?", (id,))
     db.commit()
     db.close()
-
     return jsonify({"message": "Deleted"})
 
 # Categories
@@ -169,12 +176,19 @@ def get_categories():
     cursor = db.cursor()
 
     cursor.execute("""
-        SELECT * FROM categories
+        SELECT id, name, user_id FROM categories
         WHERE user_id IS NULL OR user_id = ?
         ORDER BY user_id IS NULL DESC, name ASC
     """, (user_id,))
 
-    categories = [dict(row) for row in cursor.fetchall()]
+    row = cursor.fetchall()
+    categories = []
+    for row in rows:
+        categories.append({
+            "id": row[0],
+            "name": row[1],
+            "user_id": row[2]
+        })
     db.close()
     return jsonify(categories)
 
@@ -193,7 +207,7 @@ def add_category():
     if cursor.fetchone():
         db.close()
         return jsonify({"message": "Category already exists"}), 409
-    
+
     cursor.execute("""
         INSERT INTO categories (name, user_id) VALUES (?, ?)
     """, (data['name'], data['user_id']))
@@ -220,7 +234,7 @@ def get_budget():
         return jsonify({"amount": row["amount"]})
     else:
         return jsonify({"amount": None})
-    
+
 # POST /budget
 @app.route('/budget', methods=['POST'])
 def set_budget():
@@ -256,11 +270,11 @@ def login():
     if user:
         return jsonify({
             "message": "Login successful",
-            "user_id": user["id"]
+            "user_id": user[0]
         })
     else:
         return jsonify({"message": "Invalid credentials"}), 401
-    
+
 # Serve Frontend
 @app.route('/')
 def index():
