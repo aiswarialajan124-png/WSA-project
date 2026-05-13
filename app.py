@@ -7,7 +7,7 @@ CORS(app)
 
 # Database connection
 def get_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("/home/aiswarialajan124/WSA-project/finance-tracker/database.db")
     return conn
 
 # Database setup
