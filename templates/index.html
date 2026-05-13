@@ -857,270 +857,513 @@
     <!-- Toast -->
     <div id="toast"></div>
     <script>
-    let currentUserId = null;
-    let currentUsername = null;
-    let exchangeRate = 1;
-    let allExpenses = [];
-    let spendingChart = null;
-    
-    // Toast
-    function showToast(msg, isError = false) {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.className = isError ? 'error show' : 'show';
-        setTimeout(() => t.className = isError ? 'error' : '', 2800);
-    }
-    // Get exchange rate (EUR  -> USD)
-    async function getExchangeRate() {
-        try {
-            let response = await fetch("https://open.er-api.com/v6/latest/EUR");
-            let data = await response.json();
-            exchangeRate = Number(data.rates.USD);
-        } catch (error) {
-            console.error("API ERROR:", error);
-            exchangeRate = 1.08;
+        const BASE = 'https://aiswarialajan124.pythonanywhere.com';
+
+        let currentUserId = null;
+        let currentUsername = null;
+        let exchangeRate = 1;
+        let allExpenses = [];
+        let allCategories = [];
+        let currentBudget = null;
+        let spendingChart = null;
+        let categoryChart = null;
+
+        // Toast
+        function showToast(msg, type = 'default') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = type === 'error' ? 'error show' : type === 'success' ? 'success show' : 'show';
+            setTimeout(() => t.className ='', 2800);
         }
-    }
-    // Login
-    async function login() {
-        const btn = document.getElementById('loginBtn');
-        const errEl = document.getElementById('loginError');
-        const usernameVal = document.getElementById('username').value.trim();
-        const passwordVal = document.getElementById('password').value;
-        
-        if (!usernameVal || !passwordVal) {
-            errEl.textContent = 'Please enter your username and password';
-            errEl.style.display = 'block';
-            return;
+        //Exchange rate
+        async function getExchangeRate() {
+            try {
+                const res = await fetch("https://open.er-api.com/v6/latest/EUR");
+                const data = await res.json();
+                exchangeRate = Number(data.rates.USD);
+            } catch { exchangeRate = 1.08; }
         }
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Signing in';
-        errEl.style.display = 'none';
-        
-        try {
-            let response = await fetch("https://aiswarialajan124.pythonanywhere.com/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: usernameVal, password: passwordVal })
-            });
-            let data = await response.json();
-            
-            if (response.status === 200) {
-                currentUserId = data.user_id;
-                currentUsername = usernameVal;
-                document.getElementById('usernameDisplay').textContent = usernameVal;
-                document.getElementById("loginPage").style.display = "none";
-                document.getElementById("appPage").style.display = "block";
-                await getExchangeRate();
-                await loadExpenses();
-            } else {
-                errEl.textContent = 'Invalid username or password';
+        // Login
+        async function login() {
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            const usernameVal = document.getElementById('username').value.trim();
+            const passwordVal = document.getElementById('password').value;
+
+            if (!usernameVal || !passwordVal) {
+                errEl.textContent = 'Enter your username and password.';
+                errEl.style.display = 'block';
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = 'span class="spinner"></span> Signing in...';
+            errEl.style.display = 'none';
+
+            try {
+                const res = await fetch(`${BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameVal, password: passwordVal })
+                });
+                const data = await res.json();
+
+                if (res.status === 200) {
+                    currentUserId = data.user_id;
+                    currentUsername = usernameVal;
+                    document.getElementById('usernameDisplay').textContent = usernameVal;
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('appPage').style.display = 'block';
+                    await getExchangeRate();
+                    await loadCategories();
+                    await loadBudget();
+                    await loadExpenses();
+                } else {
+                    errEl.textContent = 'Invalid username or password.';
+                    errEl.style.display = 'block';
+                }
+            } catch {
+                errEl.textContent = 'Connection error. Try again';
                 errEl.style.display = 'block';
             }
-        } catch (err) {
-            errEl.textContent = 'Connection error. Try Again';
-            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'Sign in';
         }
-        btn.disabled = false;
-        btn.innerHTML = 'Sign in';
-    }
-    document.getElementById('password').addEventListener('keydown', e => {
-        if (e.key === 'Enter') login();
-    });
-    function logout() {
-        currentUserId = null;
-        currentUsername = null;
-        allExpenses = [];
-        
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('expenseTable').innerHTML = '';
-        document.getElementById('loginError').style.display = 'none';
-
-        if (spendingChart) {spendingChart.destroy(); spendingChart = null; }
-
-        document.getElementById('appPage').style.display = 'none';
-        document.getElementById('loginPage').style.display = 'flex';
-    }
-    // Load expenses and dashboard
-    async function loadExpenses() {
-        try {
-            let response = await fetch('https://aiswarialajan124.pythonanywhere.com/expenses');
-            let data = await response.json();
-            allExpenses = data;
-            updateStats();
-            renderTable();
-            renderChart();
-        } catch (error) {
-            showToast('Failed to load expenses', true);
-            console.error("LOAD ERROR:", error);
-        }
-    }
-    function updateStats() {
-        const total = allExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
-        const count = allExpenses.length;
-        const avg = count > 0 ? total / count : 0;
-        const totalUSD = total * exchangeRate;
-
-        document.getElementById('totalAmount').textContent = 'EUR' + total.toFixed(2);
-        document.getElementById('totalUSD').textContent = '$' + totalUSD.toFixed(2) + 'USD';
-        document.getElementById('totalCount').textContent = count;
-        document.getElementById('avgAmount').textContent = 'EUR' + avg.toFixed(2);
-    }
-    function renderTable() { 
-        const search = document.getElementById('searchFilter').value.toLowerCase();
-        const sort = document.getElementById('sortFilter').value;
-        
-        let filtered = allExpenses.filter(e =>
-        (e.description || '').toLowerCase().includes(search)
-        );
-        filtered.sort((a, b) => {
-            if (sort === 'date-desc') return new Date(b.date) - new Date(a.date);
-            if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
-            if (sort === 'amount-desc') return Number(b.amount) - Number(a.amount);
-            if (sort === 'amount-asc') return Number(a.amount) - Number(b.amount);
-            return 0;
+        document.getElementById('password').addEventListener('keydown', e => {
+            if (e.key === 'Enter') login();
         });
-        const tbody = document.getElementById('expenseTable');
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No expenses found</div></td></tr>`;
-            return;
+        // Logout
+        function logout() {
+            currentUserId = null;
+            currentUsername = null;
+            allExpenses = [];
+            allCategories = [];
+            currentBudet = null;
+
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('expenseTable').innerHTML = '';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('budgetBanner').classList.remove('show');
+
+            if (spendingChart) { spendingChart.destroy(); spendingChart = null; }
+            
+            if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
+
+            document.getElementById('appPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
         }
-        tbody.innerHTML = filtered.map(exp => {
-            const euro = Number(exp.amount);
-            const usd = (euro * exchangeRate).toFixed(2);
-            const desc = exp.description ||'-';
-            const date = exp.date || '-';
-            return `
-            <tr>
-                <td class="mono" style="color:var(--text-soft)">#${exp.id}</td>
-                <td class="mono">EUR ${euro.toFixed(2)}</td>
-                <td class="mono" style="color:var(--text-muted)">$${usd}</td>
-                <td>${desc}</td>
-                <td style="color:var(--text-muted)">${date}</td>
-                <td>
-                    <button class="btn-delete" onclick="deleteExpense(${exp.id})">Delete</button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-    function renderChart() {
+        // Load Categories
+        async function loadCategories() {
+            try{
+                const res = await fetch(`${BASE}/categories?user_id=${currentUserId}`);
+                allCategories = await res.json();
+                populateCategoriesDropdowns();
+            } catch { showToast('Failed to load categories', 'error'); }
+        }
+        // Fills all category dropdowns in the app with current categories
+        function populateCategoryDropdowns() {
+            const selects = ['categorySelect', 'editCategory', 'categoryFilter'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                const current = sel.value;
+
+                if (id === 'categoryFilter') {
+                    sel.innerHTML = '<option value="">All Categories</option>';
+                } else {
+                    sel.innerHTML = '';
+                }
+                allCategories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    sel.appendChild(opt);
+                });
+                // Add custom category option at the bottom of the add form 
+                if (id === 'categorySelect') {
+                    const opt = document.createElement('option');
+                    opt.value = '__custom__';
+                    opt.textContent = '+ Add custom category...';
+                    sel.appendChild(opt);
+                }
+                // Restore previous selection if it still exists
+                if (current) sel.value = current;
+            });
+        }
+        // Shows custom category input when user selects "+ Add custom..."
+        function handleCategoryChange() {
+            const val = document.getElementById('categorySelect').value;
+            document.getElementById('customCatRow').style.display = val === '__custom__' ? 'flex' : 'none';
+        }
+        // Saves a new custom category to the backend
+        async function saveCustomCategory() {
+            const name = document.getElementById('customCatInput').value.trim();
+            if (!name) { showToast('Enter a category name', 'error'); return; }
+
+            try {
+                const res = await fetch(`${BASE}/categories`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, user_id: currentUserId })
+                });
+                const data = await res.json();
+
+                if (res.status === 409) {
+                    showToast('Category already exists', 'error');
+                    return;
+                }
+                showToast(`"${name}" added`, success);
+                document.getElementById('customCatInput').value = '';
+                document.getElementById('customCatRow').style.display = 'none';
+                await loadCategories();
+                // Select the newly created category
+                document.getElementById('categorySelect').value = data.id;
+            } catch { showToast('Failed to add category', 'error'); }
+        }
+        function cancelCustomCategory() {
+            document.getElementById('customCatInput').value = '';
+            document.getElementById('customCatRow').style.display = 'none';
+            document.getElementById('categorySelect').value = allCategories[0]?.id || '';
+        }
+        // Load Budget
+        async function loadBudget() {
+            try{
+                const res = await fetch(`${BASE}/budget?user_id=${currentUserId}`);
+                const data = await res.json();
+                currentBudget = data.amount;
+                updateBudgetDisplay();
+            } catch { console.error('Failed to load budget');}
+        }
+        // Saves the budget the user typed in 
+        async function saveBudget() {
+            const val = document.getElementById('budgetInput').value.trim();
+            if (!val || Number(val) <= 0) { showToast('Enter a valid budget amount', 'error'); return; }
+
+            try {
+                await fetch(`${BASE}/budget`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserId, amount: Number(val) })
+                });
+                currentBudget = Number(val);
+                document.getElementById('budgetInput').value = '';
+                showToast('Budget saved', 'success');
+                updateBudgetDisplay();
+                updateBudgetBanner();
+            } catch { showToast('Failed to save budget', 'error'); }
+        }
+        // Updates the budget stat card
+        function updateBudgetDisplay() {
+            const el = document.getElementById('budgetDisplay');
+            const sub = document.getElementById('budgetRemaining');
+
+            if (!currentBudget) {
+                el.textContent = '-';
+                sub.textContent = 'not set';
+                return;
+            }
+            const total = allExpenses.reduce((s, e) => s + Number(e.amount), 0);
+            const remaining = currentBudget - total;
+
+            el.textContent = `€${currentBudget.toFixed(2)}`;
+            el.className = 'stat-value ' + (remaining < 0 ? 'danger' : remaining < currentBudget * 0.2 ? 'gold' : '');
+            sub.textContent = remaining >= 0 ? `€${remaining.toFixed(2)} remaining` : `€${Math.abs(remaining).toFixed(2)} over budget`;
+        }
+        // Shows or hides the budget warning banner
+        function updateBudgetBanner() {
+            const banner = document.getElementById('budgetBanner');
+            if (!currentBudget) { banner.classList.remove('show'); return; }
+
+            const total = allExpenses.reduce((s, e) => s + Number(e.amount), 0);
+            const pct = Math.min((total / currentBudget) * 100, 100);
+            const isOver = total > currentBudget;
+            const isClose = pct >= 80;
+
+            if (!isClose && !isOver) { banner.classList.remove('show'); return; }
+
+            banner.classList.add('show');
+            document.getElementById('budgetBannerText').textContent = isOver
+                ? `Over budget by €${(total - currentBudget).toFixed(2)}`
+                : `${pct.toFixed(0)}% of budget used`;
+            document.getElementById('budgetBannerSub').textContent = `€${total.toFixed(2)} spent of €${currentBudget.toFixed(2)} limit`;
+
+            const fill = document.getElementById('budgetBarFill');
+            fill.style.width = pct + '%';
+            fill.className = 'budget-bar-fill' + (isOver ? ' over ' : '');       
+        }
+        // Load Expenses
+        async function loadExpenses() {
+            try {
+                const res = await fetch(`${BASE}/expenses?user_id=${currentUserId}`);
+                allExpenses = await res.json();
+                updateStats();
+                updateBudgetDisplay();
+                updateBudgetBanner();
+                renderTable();
+                renderSpendingChart();
+                renderCategoryChart();
+                renderMonthlyBreakdown();
+            } catch { showToast('Failed to load expenses', 'error'); }
+        }
+        // STATS
+        function updateStats() {
+            const total = allExpenses.reduce((s, e) => s + Number(e.amount), 0);
+            const count = allExpenses.length;
+            const avg = count > 0 ? total / count : 0;
+            const totalUSD = total * exchangeRate;
+
+            document.getElementById('totalAmount').textContent = `€${total.toFixed(2)}`;
+            document.getElementById('totalUSD').textContent = `$${totalUSD.toFixed(2)} USD`;
+            document.getElementById('totalCount').textContent = count;
+            document.getElementById('avgAmount').textContent = `€${avg.toFixed(2)}`;
+        }
+        // Render Table
+        function renderTable() {
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            const sort = document.getElementById('sortFilter').value;
+            const catFilter = document.getElementById('categoryFilter').value;
+
+            let filtered = allExpenses.filter(e => {
+                const matchDesc = (e.description || '').toLowerCase().includes(search);
+                const matchCat = !catFilter || String(e.category_id) === catFilter;
+                return matchDesc && matchCat;
+            });
+            filtered.sort((a, b) => {
+                if (sort === 'date-desc') return new Date(b.date) - new Date(a.date);
+                if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
+                if (sort === 'amount-desc') return Number(b.amount) - Number(a.amount);
+                if (sort === 'amount-asc') return Number(a.amount) - Number(b.amount);
+                return 0;
+            });
+            const tbody = document.getElementById('expenseTable');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No expenses found</div></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = filtered.map(exp => {
+                const euro = Number(exp.amount);
+                const usd = (euro * exchangeRate).toFixed(2);
+                const desc = exp.description || '-';
+                const date = exp.date || '-';
+                const catName = exp.category_name || '-';
+                return `
+                <tr>
+                    <td class="mono" style="color:var(--text-soft)">#${exp.id}</td>
+                    <td class="mono">€${euro.toFixed(2)}</td>
+                    <td>${desc}</td>
+                    <td><span class="category-badge">${catName}</span></td>
+                    <td style="color:var(--text-muted)">${date}</td>
+                    <td class="action-cell">
+                        <button class="btn-edit" onclick="openEditModal(${exp.id})">Edit</button>
+                        <button class="btn-delete" onclick="deleteExpense(${exp.id})">Delete</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        // Spending Chart
+        function renderSpendingChart() {
         const ctx = document.getElementById('spendingChart').getContext('2d');
         if (spendingChart) spendingChart.destroy();
+ 
         const byDate = {};
         allExpenses.forEach(e => {
             const d = e.date || 'Unknown';
             byDate[d] = (byDate[d] || 0) + Number(e.amount);
         });
+
         const sorted = Object.entries(byDate).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-        const labels = sorted.map(([d]) => d);
-        const values = sorted.map(([, v]) => v);
-        
+ 
         spendingChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels,
+                labels: sorted.map(([d]) => d),
                 datasets: [{
-                    label: 'Spending (EUR)',
-                    data: values,
-                    backgroundColor: 'rgba(45, 90, 61, 0.15)',
-                    borderColor: 'rgba(45, 90, 61, 0.7)',
+                    data: sorted.map(([, v]) => v),
+                    backgroundColor: 'rgba(45,90,61,0.15)',
+                    borderColor: 'rgba(45,90,61,0.7)',
                     borderWidth: 1.5,
                     borderRadius: 4,
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: {display: false } },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: {font: { family: 'DM Mono', size: 11 }, color: '#a09893' }
-                    },
-                    y: { 
-                        grid: { color: '#e2ddd7' },
-                        ticks: {
-                            font: { family: 'DM Mono', size: 11},
-                            color: '#a09893',
-                            callback: v => 'EUR' + v
-                        }
-                    }
+                    x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893' } },
+                    y: { grid: { color: '#e2ddd7' }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893', callback: v => '€' + v } }
                 }
             }
         });
     }
-    // Add expense
-    async function addExpense() {
-        if (!currentUserId) { showToast('Please login first', true); 
-        return;
-    }
-    const amountVal =  document.getElementById('amount').value.trim();
-    const descVal = document.getElementById('description').value.trim();
-    const dateVal = document.getElementById('date').value;
-    const msgEl = document.getElementById('validationMsg');
-        
-    let errors = [];
-    if (!amountVal || Number(amountVal) <= 0) errors.push('amount');
-    if (!descVal) errors.push('description');
-    if (!dateVal) errors.push('date');
-        
-    ['amount', 'description', 'date'].forEach(id => {
-        document.getElementById(id).classList.remove('error');
-    });
-    if (errors.length > 0) { 
-        errors.forEach(id => document.getElementById(id).classList.add('error'));
-        msgEl.style.display = 'block';
-        msgEl.textContent = errors.length === 3
-            ? 'Please fill in all fields before adding an expense'
-            : `Please fill in: ${errors.join(', ')}.`;
-        return;
-    }
-    msgEl.style.display = 'none';
-    
-    const addBtn = document.getElementById('addBtn');
-    addBtn.disabled = true;
-    addBtn.textContent = 'Adding...';
-        
-    try {
-        let expense = {
-            amount: amountVal,
-            description: descVal,
-            category_id: 1,
-            user_id: currentUserId,
-            date: dateVal
-        };
-        await fetch("https://aiswarialajan124.pythonanywhere.com/expenses", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json"
+    // Category pie chart
+    function renderCategoryChart() {
+        const ctx = document.getElementById('categpryChart').getContext('2d');
+        if (categoryChart) categoryChart.destroy();
+
+        const byCat = {};
+        allExpenses.forEach(e => {
+            const name = e.category_name || 'Uncategorised';
+            byCat[name] = (byCat[name] || 0) + Number(e.amount);
+        })
+        const labels = Object.keys(byCat);
+        const values = Object.value(byCat);
+
+        const palette = ['#2d5a3d', '#c9a84c', '#8b2020', '#4a7c59', '#d4a843', '#7a4f10', '#a09893', '#4d7a6b', '#556b2f'];
+
+        categorChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: palette.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#faf9f7'
+                }]
             },
-            body: JSON.stringify(expense)
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { font: { family: 'Sora', size: 11}, color: '#7a7470', boxWidth: 12, padding: 10} }
+                }
+            }
         });
-        document.getElementById('amount').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('date').value = '';
-        
-        showToast('Expense added');
-        await loadExpenses();
-    } catch (err) {
-        showToast('Failed to add expense', true);
     }
-    addBtn.disabled   = false;
-    addBtn.textContent = '+ Add';
-}
-// Delete expense
-async function deleteExpense(id) {
-    try {
-        await fetch(`https://aiswarialajan124.pythonanywhere.com/expenses/${id}`, {
-            method: "DELETE"
+    // Monthly Breakdown
+    function renderMonthlyBreakdown() {
+        const byMonth = {};
+        const countByMonth = {};
+
+        allExpenses.forEach(e => {
+            if (!e.date) return;
+            const [year, month] = e.date.split('-');
+            const key = `${year}-${month}`;
+            byMonth[key] = (byMonth[key] || 0) + Number(e.amount);
+            countByMonth[key] = (countByMonth[key] || 0) + 1;
         });
-        showToast('Expense removed'); 
-        await loadExpenses();
-    } catch (err) {
-        showToast('Failed to delete expense', true);
+        const sorted = Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0]));
+        const grid = document.getElementById('monthlyGrid');
+
+        if (sorted.length === 0) {
+            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">No data yet</div>`;
+            return;
+        }
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        grid.innerHTML = sorted.map(([key, total]) => {
+            const [year, month] = key.split('-');
+            const label = `${monthNames[parseInt(month) - 1]} ${year}`;
+            const count = countByMonth[key];
+            return `
+            <div class="month-card">
+                <div class="month-name">${label}</div>
+                <div class="month-amount">€${total.toFixed(2)}</div>
+                <div class="month-count">${count} expenses${count !== 1 ? 's' : ''}</div>
+            </div>`;
+        }).join('');
     }
-}
-</script>
+    // Add Expense
+    async function addExpense() {
+        if( !currentUserId) { showToast('Enter login first', 'error'); return; }
+
+        const amountVal = document.getElementById('amount').value.trim();
+        const descVal = document.getElementById('description').value.trim();
+        const dateVal = document.getElementById('date').value;
+        const catVal = document.getElementById('categorySelect').value;
+        const msgEl = document.getElementById('validateMsg');
+
+        // Validation
+        let errors = [];
+        if (!amountVal || Number(amountVal) <= 0) errors.push('amount');
+        if (!descVal) errors.push('description');
+        if (!dateVal) errors.push('date');
+        if (!catVal || catVal === '__custom__') errors.push('category (select or create one)');
+
+        ['amount', 'description', 'date'].forEach(id => document.getElementById(id).classList.remove('error'));
+
+        if (errors.length > 0) {
+            ['amount', 'description', 'date'].forEach(id => {
+                if (errors.some(e => e.startsWith(id))) document.getElementById(id).classList.add('error');
+            });
+            msgEl.style.display = 'block';
+            msgEl.textContent = `Fill in: ${errors.join(', ')}.`;
+            return;
+        }
+        msgEl.style.display = 'none';
+        const addBtn = document.getElementById('addBtn');
+        addBtn.disabled = true;
+        addBtn.textContent = 'Adding...';
+
+        try {
+            await fetch(`${BASE}/expenses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: amountVal,
+                    description: descVal,
+                    category_id: Number(catVal),
+                    user_id: currentUserId,
+                    date: dateVal
+                })
+            });
+            document.getElementById('amount').value = '';
+            document.getElementByID('description').value = '';
+            document.getElementById('date').value = '';
+
+            showToast('Expense added', 'success');
+            await loadExpenses();
+        } catch { showToast('Failed to add expense', 'error'); }
+
+        addBtn.disabled = false;
+        addBtn.textContent = '+ Add';
+    }
+    // Edit Modal
+    function openEditModal(id) {
+        const exp = allExpenses.find(e => e.id === id);
+        if (!exp) return;
+
+        document.getElementById('editId').value = exp.id;
+        document.getElementById('editAmount').value = exp.amount;
+        document.getElementById('editDescription').value = exp.description || '';
+        document.getElementById('editDate').value = exp.date || '';
+        document.getElementById('editCategory').value = exp.category_id || '';
+        document.getElementById('editModal').classList.remove('show');
+    }
+    function closeModal() {
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        async function saveEdit() {
+            const id = document.getElementById('editId').value;
+            const amount = document.getElementById('editAmount').value.trim();
+            const desc = document.getElementById('editDesription').value.trim();
+            const date = document.getElementById('editDate').value;
+            const catId = document.getElementById('editCategory').value;
+
+            if (!amount || Number(amount) <= 0 || !desc || !date) {
+                showToast('Fill in all fields', 'error');
+                return;
+            }
+            try {
+                await fetch(`${BASE}/expenses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, description: desc, category_id: Number(catId), date })
+                });
+                closeModal();
+                shoToast('Expense updated', 'success');
+                await loadExpenses();
+            } catch { showToast('Failed to update expense', 'error'); }
+        }
+        // Delete Expense
+        async function deleteExpense(id) {
+            try {
+                await fetch(`${BASE}/expenses/${id}`, { method: 'DELETE' });
+                showToast('Expense removed');
+                await loadExpenses();
+            } catch { showToast('Failed to delete expense', 'error'); }
+        }
+    }
+    </script>
 </body>
 </html>
