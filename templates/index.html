@@ -26,7 +26,9 @@
             --danger-light: #fdf0f0;
             --danger-border: #e8c0c0;
             --warning: #7a4f10;
-            --warning-light: #fef8ee;
+            --warning-bg: #fef8ee;
+            --warning-border: #f0d080;
+            --warning-text: #7a4f10;
             --gold: #c9a84c;
             --mono: 'DM Mono', monospace;
             --sans: 'Sora', sans-serif;
@@ -169,7 +171,7 @@
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 10
+            z-index: 10;
         }
         .topbar-brand {
             display: flex;
@@ -187,7 +189,8 @@
         }
         .topbar-right { 
             display: flex; 
-            align-items: center; gap: 1rem; 
+            align-items: center;
+            gap: 1rem; 
         }
         .user-chip {
             display: flex;
@@ -201,7 +204,8 @@
             color: var(--text-muted);
         }
         .user-chip span {
-            font-weight: 600; color: var(--text); 
+            font-weight: 600;
+            color: var(--text); 
         }
         .btn-logout {
             padding: 0.4rem 1rem;
@@ -217,13 +221,12 @@
         }
         .btn-logout:hover { 
             background: var(--danger-light); 
-            border-color: var(--danger-border); }
-
+            border-color: var(--danger-border);
+        }
         .main { max-width: 1000px; margin: 0 auto; padding: 2rem; }
-
         .budget-banner {
             background: var(--warning-bg);
-            border: 1px solid var (--warning-border); 
+            border: 1px solid var(--warning-border);
             border-radius: var(--radius-lg);
             padding: 1rem 1.5rem;
             margin-bottom: 1.25rem;
@@ -265,7 +268,7 @@
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 equal-width columns */
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -297,10 +300,10 @@
             color: var(--gold); 
         }
         .stat-value.danger {
-            color: val(--danger);
+            color: var(--danger);
         }
         .stat-sub {
-        font-size: 0.75rem;
+            font-size: 0.75rem;
             color: var(--text-soft);
             margin-top: 0.25rem;
         }
@@ -379,7 +382,7 @@
         }
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
             gap: 0.75rem;
             align-items: end;
         }
@@ -485,7 +488,9 @@
         tbody tr:hover { 
             background: var(--surface2); 
         }
-        .mono { font-family: var(--mono); font-size: 0.85rem; 
+        .mono { 
+            font-family: var(--mono); 
+            font-size: 0.85rem; 
         }
         .category-badge {
             display: inline-block;
@@ -517,7 +522,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             color: var(--text-muted);
-            font-family: var(sans);
+            font-family: var(--sans);
             font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
@@ -553,7 +558,7 @@
         .modal {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--radius-log);
+            border-radius: var(--radius-lg);
             padding: 2rem;
             width: 100%;
             max-width: 480px;
@@ -670,10 +675,10 @@
             </div>
             <div class="field-group">
                 <label>Password</label>
-                <input type="password" id="password" placeholder="Enter password" autocomplete="currendt-password">
+                <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
             </div>
             <button class="btn-primary" onclick="login()" id="loginBtn">Sign in</button>
-            <div class="login-error" id="loginError">Invalid username or password.Try again</div>
+            <div class="login-error" id="loginError">Invalid username or password. Try again</div>
         </div>
      </div>
      <!-- App Page -->
@@ -684,7 +689,7 @@
                     Finance Tracker
             </div>
             <div class="topbar-right">
-                <div class="user-chip">Signed in as<span id="usernameDisplay">-</span></div>
+                <div class="user-chip">Signed in as <span id="usernameDisplay">-</span></div>
                 <button class="btn-logout" onclick="logout()">Sign out</button>
             </div>
         </header>
@@ -722,8 +727,7 @@
                     <div class="stat-sub" id="budgetRemaining">not set</div>
                 </div>
             </div>
-            <!-- Charts Row -->
-             <div class="charts-rows">
+            <div class="charts-row">
                 <!-- Spending over time bar chart -->
                  <div class="panel">
                     <div class="panel-title">Spending Over Time</div>
@@ -786,13 +790,13 @@
                         <button class="btn-add" onclick="addExpense()" id="addBtn">+ Add</button>
                     </div>
                 </div>
-                <!-- Custom category input : shown when user selects "Add custom ..." -->
+                <!-- Custom category input: shown when user selects "Add custom..." -->
                  <div class="custom-cat-row" id="customCatRow">
                     <input type="text" id="customCatInput" placeholder="New category name">
                     <button class="btn-sm" onclick="saveCustomCategory()">Add</button>
                     <button class="btn-sm secondary" onclick="cancelCustomCategory()">Cancel</button>
                  </div>
-                <div class="validation-msg" id="validationMsg">Fill in all feilds before adding expense</div>
+                <div class="validation-msg" id="validationMsg">Fill in all fields before adding expense</div>
              </div>
              <!-- Expense Table -->
               <div class="panel">
@@ -827,7 +831,6 @@
                     <tbody id="expenseTable"></tbody>
                 </table>
             </div>
-
         </main>
     </div>
     <div class="modal-overlay" id="editModal">
@@ -840,6 +843,10 @@
                     <input type="number" id="editAmount" step="0.01" min="0.01">
                 </div>
                 <div class="form-field">
+                    <label>Date</label>
+                    <input type="date" id="editDate">
+                </div>
+                <div class="form-field full">
                     <label>Description</label>
                     <input type="text" id="editDescription">
                 </div>
@@ -873,9 +880,9 @@
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.className = type === 'error' ? 'error show' : type === 'success' ? 'success show' : 'show';
-            setTimeout(() => t.className ='', 2800);
+            setTimeout(() => t.className = '', 2800);
         }
-        //Exchange rate
+        // Exchange rate
         async function getExchangeRate() {
             try {
                 const res = await fetch("https://open.er-api.com/v6/latest/EUR");
@@ -896,7 +903,7 @@
                 return;
             }
             btn.disabled = true;
-            btn.innerHTML = 'span class="spinner"></span> Signing in...';
+            btn.innerHTML = '<span class="spinner"></span> Signing in...';
             errEl.style.display = 'none';
 
             try {
@@ -937,7 +944,7 @@
             currentUsername = null;
             allExpenses = [];
             allCategories = [];
-            currentBudet = null;
+            currentBudget = null;
 
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
@@ -946,7 +953,6 @@
             document.getElementById('budgetBanner').classList.remove('show');
 
             if (spendingChart) { spendingChart.destroy(); spendingChart = null; }
-            
             if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
 
             document.getElementById('appPage').style.display = 'none';
@@ -954,13 +960,12 @@
         }
         // Load Categories
         async function loadCategories() {
-            try{
+            try {
                 const res = await fetch(`${BASE}/categories?user_id=${currentUserId}`);
                 allCategories = await res.json();
-                populateCategoriesDropdowns();
+                populateCategoryDropdowns();
             } catch { showToast('Failed to load categories', 'error'); }
         }
-        // Fills all category dropdowns in the app with current categories
         function populateCategoryDropdowns() {
             const selects = ['categorySelect', 'editCategory', 'categoryFilter'];
             selects.forEach(id => {
@@ -978,7 +983,7 @@
                     opt.textContent = cat.name;
                     sel.appendChild(opt);
                 });
-                // Add custom category option at the bottom of the add form 
+                // Add custom category option at the bottom of the add form
                 if (id === 'categorySelect') {
                     const opt = document.createElement('option');
                     opt.value = '__custom__';
@@ -1002,7 +1007,7 @@
             try {
                 const res = await fetch(`${BASE}/categories`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, user_id: currentUserId })
                 });
                 const data = await res.json();
@@ -1011,7 +1016,7 @@
                     showToast('Category already exists', 'error');
                     return;
                 }
-                showToast(`"${name}" added`, success);
+                showToast(`"${name}" added`, 'success');
                 document.getElementById('customCatInput').value = '';
                 document.getElementById('customCatRow').style.display = 'none';
                 await loadCategories();
@@ -1026,14 +1031,14 @@
         }
         // Load Budget
         async function loadBudget() {
-            try{
+            try {
                 const res = await fetch(`${BASE}/budget?user_id=${currentUserId}`);
                 const data = await res.json();
                 currentBudget = data.amount;
                 updateBudgetDisplay();
-            } catch { console.error('Failed to load budget');}
+            } catch { console.error('Failed to load budget'); }
         }
-        // Saves the budget the user typed in 
+        // Saves the budget the user typed in
         async function saveBudget() {
             const val = document.getElementById('budgetInput').value.trim();
             if (!val || Number(val) <= 0) { showToast('Enter a valid budget amount', 'error'); return; }
@@ -1088,9 +1093,9 @@
 
             const fill = document.getElementById('budgetBarFill');
             fill.style.width = pct + '%';
-            fill.className = 'budget-bar-fill' + (isOver ? ' over ' : '');       
+            fill.className = 'budget-bar-fill' + (isOver ? ' over' : '');
         }
-        // Load Expenses
+        // Load Expenses — fetches only the logged-in user's expenses via ?user_id=
         async function loadExpenses() {
             try {
                 const res = await fetch(`${BASE}/expenses?user_id=${currentUserId}`);
@@ -1104,7 +1109,7 @@
                 renderMonthlyBreakdown();
             } catch { showToast('Failed to load expenses', 'error'); }
         }
-        // STATS
+        // Stats
         function updateStats() {
             const total = allExpenses.reduce((s, e) => s + Number(e.amount), 0);
             const count = allExpenses.length;
@@ -1150,6 +1155,7 @@
                 <tr>
                     <td class="mono" style="color:var(--text-soft)">#${exp.id}</td>
                     <td class="mono">€${euro.toFixed(2)}</td>
+                    <td class="mono" style="color:var(--text-muted)">$${usd}</td>
                     <td>${desc}</td>
                     <td><span class="category-badge">${catName}</span></td>
                     <td style="color:var(--text-muted)">${date}</td>
@@ -1162,181 +1168,184 @@
         }
         // Spending Chart
         function renderSpendingChart() {
-        const ctx = document.getElementById('spendingChart').getContext('2d');
-        if (spendingChart) spendingChart.destroy();
- 
-        const byDate = {};
-        allExpenses.forEach(e => {
-            const d = e.date || 'Unknown';
-            byDate[d] = (byDate[d] || 0) + Number(e.amount);
-        });
+            const ctx = document.getElementById('spendingChart').getContext('2d');
+            if (spendingChart) spendingChart.destroy();
 
-        const sorted = Object.entries(byDate).sort((a, b) => new Date(a[0]) - new Date(b[0]));
- 
-        spendingChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: sorted.map(([d]) => d),
-                datasets: [{
-                    data: sorted.map(([, v]) => v),
-                    backgroundColor: 'rgba(45,90,61,0.15)',
-                    borderColor: 'rgba(45,90,61,0.7)',
-                    borderWidth: 1.5,
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893' } },
-                    y: { grid: { color: '#e2ddd7' }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893', callback: v => '€' + v } }
-                }
-            }
-        });
-    }
-    // Category pie chart
-    function renderCategoryChart() {
-        const ctx = document.getElementById('categpryChart').getContext('2d');
-        if (categoryChart) categoryChart.destroy();
-
-        const byCat = {};
-        allExpenses.forEach(e => {
-            const name = e.category_name || 'Uncategorised';
-            byCat[name] = (byCat[name] || 0) + Number(e.amount);
-        })
-        const labels = Object.keys(byCat);
-        const values = Object.value(byCat);
-
-        const palette = ['#2d5a3d', '#c9a84c', '#8b2020', '#4a7c59', '#d4a843', '#7a4f10', '#a09893', '#4d7a6b', '#556b2f'];
-
-        categorChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: palette.slice(0, labels.length),
-                    borderWidth: 2,
-                    borderColor: '#faf9f7'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'right', labels: { font: { family: 'Sora', size: 11}, color: '#7a7470', boxWidth: 12, padding: 10} }
-                }
-            }
-        });
-    }
-    // Monthly Breakdown
-    function renderMonthlyBreakdown() {
-        const byMonth = {};
-        const countByMonth = {};
-
-        allExpenses.forEach(e => {
-            if (!e.date) return;
-            const [year, month] = e.date.split('-');
-            const key = `${year}-${month}`;
-            byMonth[key] = (byMonth[key] || 0) + Number(e.amount);
-            countByMonth[key] = (countByMonth[key] || 0) + 1;
-        });
-        const sorted = Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0]));
-        const grid = document.getElementById('monthlyGrid');
-
-        if (sorted.length === 0) {
-            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">No data yet</div>`;
-            return;
-        }
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-        grid.innerHTML = sorted.map(([key, total]) => {
-            const [year, month] = key.split('-');
-            const label = `${monthNames[parseInt(month) - 1]} ${year}`;
-            const count = countByMonth[key];
-            return `
-            <div class="month-card">
-                <div class="month-name">${label}</div>
-                <div class="month-amount">€${total.toFixed(2)}</div>
-                <div class="month-count">${count} expenses${count !== 1 ? 's' : ''}</div>
-            </div>`;
-        }).join('');
-    }
-    // Add Expense
-    async function addExpense() {
-        if( !currentUserId) { showToast('Enter login first', 'error'); return; }
-
-        const amountVal = document.getElementById('amount').value.trim();
-        const descVal = document.getElementById('description').value.trim();
-        const dateVal = document.getElementById('date').value;
-        const catVal = document.getElementById('categorySelect').value;
-        const msgEl = document.getElementById('validateMsg');
-
-        // Validation
-        let errors = [];
-        if (!amountVal || Number(amountVal) <= 0) errors.push('amount');
-        if (!descVal) errors.push('description');
-        if (!dateVal) errors.push('date');
-        if (!catVal || catVal === '__custom__') errors.push('category (select or create one)');
-
-        ['amount', 'description', 'date'].forEach(id => document.getElementById(id).classList.remove('error'));
-
-        if (errors.length > 0) {
-            ['amount', 'description', 'date'].forEach(id => {
-                if (errors.some(e => e.startsWith(id))) document.getElementById(id).classList.add('error');
+            const byDate = {};
+            allExpenses.forEach(e => {
+                const d = e.date || 'Unknown';
+                byDate[d] = (byDate[d] || 0) + Number(e.amount);
             });
-            msgEl.style.display = 'block';
-            msgEl.textContent = `Fill in: ${errors.join(', ')}.`;
-            return;
-        }
-        msgEl.style.display = 'none';
-        const addBtn = document.getElementById('addBtn');
-        addBtn.disabled = true;
-        addBtn.textContent = 'Adding...';
+            const sorted = Object.entries(byDate).sort((a, b) => new Date(a[0]) - new Date(b[0]));
 
-        try {
-            await fetch(`${BASE}/expenses`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    amount: amountVal,
-                    description: descVal,
-                    category_id: Number(catVal),
-                    user_id: currentUserId,
-                    date: dateVal
-                })
+            spendingChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(([d]) => d),
+                    datasets: [{
+                        data: sorted.map(([, v]) => v),
+                        backgroundColor: 'rgba(45,90,61,0.15)',
+                        borderColor: 'rgba(45,90,61,0.7)',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893' } },
+                        y: { grid: { color: '#e2ddd7' }, ticks: { font: { family: 'DM Mono', size: 10 }, color: '#a09893', callback: v => '€' + v } }
+                    }
+                }
             });
-            document.getElementById('amount').value = '';
-            document.getElementByID('description').value = '';
-            document.getElementById('date').value = '';
+        }
+        // Category pie chart
+        function renderCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
 
-            showToast('Expense added', 'success');
-            await loadExpenses();
-        } catch { showToast('Failed to add expense', 'error'); }
+            const byCat = {};
+            allExpenses.forEach(e => {
+                const name = e.category_name || 'Uncategorised';
+                byCat[name] = (byCat[name] || 0) + Number(e.amount);
+            });
+            const labels = Object.keys(byCat);
+            const values = Object.values(byCat);
+            const palette = ['#2d5a3d', '#c9a84c', '#8b2020', '#4a7c59', '#d4a843', '#7a4f10', '#a09893', '#4d7a6b', '#556b2f'];
 
-        addBtn.disabled = false;
-        addBtn.textContent = '+ Add';
-    }
-    // Edit Modal
-    function openEditModal(id) {
-        const exp = allExpenses.find(e => e.id === id);
-        if (!exp) return;
+            
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: palette.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#faf9f7'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: 'Sora', size: 11 }, color: '#7a7470', boxWidth: 12, padding: 10 } }
+                    }
+                }
+            });
+        }
+        // Monthly Breakdown
+        function renderMonthlyBreakdown() {
+            const byMonth = {};
+            const countByMonth = {};
 
-        document.getElementById('editId').value = exp.id;
-        document.getElementById('editAmount').value = exp.amount;
-        document.getElementById('editDescription').value = exp.description || '';
-        document.getElementById('editDate').value = exp.date || '';
-        document.getElementById('editCategory').value = exp.category_id || '';
-        document.getElementById('editModal').classList.remove('show');
-    }
-    function closeModal() {
+            allExpenses.forEach(e => {
+                if (!e.date) return;
+                const [year, month] = e.date.split('-');
+                const key = `${year}-${month}`;
+                byMonth[key] = (byMonth[key] || 0) + Number(e.amount);
+                countByMonth[key] = (countByMonth[key] || 0) + 1;
+            });
+            const sorted = Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0]));
+            const grid = document.getElementById('monthlyGrid');
+
+            if (sorted.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">No data yet</div>`;
+                return;
+            }
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            grid.innerHTML = sorted.map(([key, total]) => {
+                const [year, month] = key.split('-');
+                const label = `${monthNames[parseInt(month) - 1]} ${year}`;
+                const count = countByMonth[key];
+                return `
+                <div class="month-card">
+                    <div class="month-name">${label}</div>
+                    <div class="month-amount">€${total.toFixed(2)}</div>
+                    <div class="month-count">${count} expense${count !== 1 ? 's' : ''}</div>
+                </div>`;
+            }).join('');
+        }
+        // Add Expense
+        async function addExpense() {
+            if (!currentUserId) { showToast('Please login first', 'error'); return; }
+
+            const amountVal = document.getElementById('amount').value.trim();
+            const descVal = document.getElementById('description').value.trim();
+            const dateVal = document.getElementById('date').value;
+            const catVal = document.getElementById('categorySelect').value;
+            const msgEl = document.getElementById('validationMsg');
+
+            // Validation
+            let errors = [];
+            if (!amountVal || Number(amountVal) <= 0) errors.push('amount');
+            if (!descVal) errors.push('description');
+            if (!dateVal) errors.push('date');
+            if (!catVal || catVal === '__custom__') errors.push('category (select or create one)');
+
+            ['amount', 'description', 'date'].forEach(id => document.getElementById(id).classList.remove('error'));
+
+            if (errors.length > 0) {
+                ['amount', 'description', 'date'].forEach(id => {
+                    if (errors.some(e => e.startsWith(id))) document.getElementById(id).classList.add('error');
+                });
+                msgEl.style.display = 'block';
+                msgEl.textContent = `Fill in: ${errors.join(', ')}.`;
+                return;
+            }
+            msgEl.style.display = 'none';
+            const addBtn = document.getElementById('addBtn');
+            addBtn.disabled = true;
+            addBtn.textContent = 'Adding...';
+
+            try {
+                await fetch(`${BASE}/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: amountVal,
+                        description: descVal,
+                        category_id: Number(catVal),
+                        user_id: currentUserId,
+                        date: dateVal
+                    })
+                });
+                document.getElementById('amount').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('date').value = '';
+
+                showToast('Expense added', 'success');
+                await loadExpenses();
+            } catch { showToast('Failed to add expense', 'error'); }
+
+            addBtn.disabled = false;
+            addBtn.textContent = '+ Add';
+        }
+        // Edit Modal — opens popup and pre-fills fields with the selected expense
+        function openEditModal(id) {
+            const exp = allExpenses.find(e => e.id === id);
+            if (!exp) return;
+
+            document.getElementById('editId').value = exp.id;
+            document.getElementById('editAmount').value = exp.amount;
+            document.getElementById('editDescription').value = exp.description || '';
+            document.getElementById('editDate').value = exp.date || '';
+            document.getElementById('editCategory').value = exp.category_id || '';
+            document.getElementById('editModal').classList.add('show');
+        }
+        // Closes the edit modal
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+        // Close modal if user clicks outside of it
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
         async function saveEdit() {
             const id = document.getElementById('editId').value;
             const amount = document.getElementById('editAmount').value.trim();
-            const desc = document.getElementById('editDesription').value.trim();
+            const desc = document.getElementById('editDescription').value.trim();
             const date = document.getElementById('editDate').value;
             const catId = document.getElementById('editCategory').value;
 
@@ -1351,7 +1360,7 @@
                     body: JSON.stringify({ amount, description: desc, category_id: Number(catId), date })
                 });
                 closeModal();
-                shoToast('Expense updated', 'success');
+                showToast('Expense updated', 'success');
                 await loadExpenses();
             } catch { showToast('Failed to update expense', 'error'); }
         }
@@ -1363,7 +1372,6 @@
                 await loadExpenses();
             } catch { showToast('Failed to delete expense', 'error'); }
         }
-    }
     </script>
 </body>
 </html>
